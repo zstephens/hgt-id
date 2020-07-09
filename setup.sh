@@ -11,11 +11,12 @@ cat << EOF
 ######
 ##      HGT-ID v1.0 installation script
 ##      Script Options:
-##		-r	-		Reference genome FASTA file used to generate BAM file
+##		-r	-		Reference genome FASTA file
+##		-d	-		Viral references FASTA file
 ##		-h	-		Display this usage/help text (No arg)
 ##		-v	-		verbose (No arg)
 ##
-#################################################################################################################
+#########################################################################
 ##
 ## Authors:             Saurabh Baheti
 ## Creation Date:       September 20 2016
@@ -23,16 +24,17 @@ cat << EOF
 ##
 ## For questions, comments, or concerns, contact Saurabh Baheti(baheti.saurabh@mayo.edu)
 ##
-#################################################################################################################
+#########################################################################
 EOF
 }
 
-while getopts "r:vh" OPTION; do
+while getopts "r:d:vh" OPTION; do
   case $OPTION in
 		v) verbose="YES" ;;
 		h) usage
         exit ;;
         r) ref_genome=$OPTARG ;;
+        d) vir_genome=$OPTARG ;;
    \?) echo "Invalid option: -$OPTARG. See output file for usage." >&2
        usage
        exit ;;
@@ -44,7 +46,14 @@ done
 
 if [[ -z "$ref_genome"  && ! -s "$ref_genome" ]]
 then
-	echo "Must provide at least required options. See output file for usage." >&2
+	echo "Must specify reference FASTA (-r)." >&2
+	usage
+	exit 1;
+fi
+
+if [[ -z "$vir_genome"  && ! -s "$vir_genome" ]]
+then
+	echo "Must specify viral FASTA (-r)." >&2
 	usage
 	exit 1;
 fi
@@ -111,7 +120,7 @@ echo -e "ok"
 #### check for gcc complier
 echo -e "Checking executables .....\n"
 gcc=`gcc --version 2>&1`
-if [[ ! `echo $gcc | grep gcc` ]]; then echo -e "no gcc compiler installed. Please install a gcc compiler "; exit 1;
+if [[ ! `echo $gcc | grep 'gcc\|clang'` ]]; then echo -e "no gcc compiler installed. Please install a gcc compiler "; exit 1;
 else ver=`echo $gcc | awk '{print $3}'`;echo -e "gcc version: $ver                                      already installed, nothing to do ...\n";fi
 echo -e "ok"
 
@@ -122,11 +131,12 @@ if [[ ! `echo $pp | grep Perl`  ]];then echo -e "No perl found, please install p
 else ver=`echo $pp | awk -F ',' '{print $2}'`;echo -e "perl version: $ver                                      already installed, nothing to do ...\n";fi
 echo -e "ok"
 perl=${perl%*/*}
+
 #### java
 java=`which java`
 jj=`java -version 2>&1 | head -n 1 | awk -F '"' '{print $2}' | awk -F'.' 'BEGIN {OFS="."} {print $1,$2} '`
-if [[ $(echo "$jj == 1.7" | bc) -ne 0 ]]; then echo -e "correct version of JAVA is installed";
-else echo -e "1.7 version of JAVA is required to run the pipeline ....";exit 1; fi
+#if [[ $(echo "$jj == 1.7" | bc) -ne 0 ]]; then echo -e "correct version of JAVA is installed";
+#else echo -e "1.7 version of JAVA is required to run the pipeline ....";exit 1; fi
 if [[ ! $jj ]];then echo -e "No JAVA found, please install java before using the tool";exit 1;
 else ver=` java -version 2>&1 | head -n 1| awk '{print $3}'`;echo -e "java version: $ver                                      already installed, nothing to do ...\n";fi
 echo -e "ok"
@@ -202,27 +212,34 @@ cd ..
 
 #### resources
 echo -e "downloading and creating the indexes for the reference genome ....\n"
-cp $ref_genome $RESOURCES/reference.fa
+cp $ref_genome $RESOURCES/human.fa
 ref=$RESOURCES/reference.fa
 echo -e "creating samtools index file ...\n"
-$SAMTOOLS/samtools faidx $RESOURCES/reference.fa
-echo -e "ok"
-
-cd $RESOURCES
-echo -e "downloading the Human reference genome .....\n"
-# human reference genome
-$wget -q ftp://ftp.ncbi.nlm.nih.gov/sra/reports/Assembly/GRCh37-HG19_Broad_variant/Homo_sapiens_assembly19.fasta
-cat Homo_sapiens_assembly19.fasta | awk '{if($0 ~ /^>/){print ">chr"$1} else {print}}' | sed -e 's/chr>/chr/g' | sed -e 's/chrMT/chrM/g' > human.fa
-echo -e "indexing the human reference genome ....\n"
-rm Homo_sapiens_assembly19.fasta
 $SAMTOOLS/samtools faidx $RESOURCES/human.fa
 echo -e "ok"
-# viral reference genome
-echo -e "downloading the viral reference genome .....\n"
-$wget -q ftp://ftp.ncbi.nlm.nih.gov/refseq/release/viral/viral.1.1.genomic.fna.gz
-zcat viral.1.1.genomic.fna.gz | awk -F'[|,]' '{if($0 ~/^>/){print ">"$5"_"$2} else {print}}' | tr " " "_" | sed -e 's/>_/>/g' > virus.fa
-echo -e "indexing the viral reference genome ....\n"
-rm viral.1.1.genomic.fna.gz
+
+# does the workflow actually need reference.fa? lets add a symlink just in case
+ln -s $RESOURCES/human.fa $RESOURCES/reference.fa
+
+cd $RESOURCES
+
+#echo -e "downloading the Human reference genome .....\n"
+## human reference genome
+#$wget -q ftp://ftp.ncbi.nlm.nih.gov/sra/reports/Assembly/GRCh37-HG19_Broad_variant/Homo_sapiens_assembly19.fasta
+#cat Homo_sapiens_assembly19.fasta | awk '{if($0 ~ /^>/){print ">chr"$1} else {print}}' | sed -e 's/chr>/chr/g' | sed -e 's/chrMT/chrM/g' > human.fa
+#echo -e "indexing the human reference genome ....\n"
+#rm Homo_sapiens_assembly19.fasta
+#$SAMTOOLS/samtools faidx $RESOURCES/human.fa
+#echo -e "ok"
+
+## viral reference genome
+#echo -e "downloading the viral reference genome .....\n"
+#$wget -q ftp://ftp.ncbi.nlm.nih.gov/refseq/release/viral/viral.1.1.genomic.fna.gz
+#zcat viral.1.1.genomic.fna.gz | awk -F'[|,]' '{if($0 ~/^>/){print ">"$5"_"$2} else {print}}' | tr " " "_" | sed -e 's/>_/>/g' > virus.fa
+#echo -e "indexing the viral reference genome ....\n"
+#rm viral.1.1.genomic.fna.gz
+
+cp $vir_genome $RESOURCES/virus.fa
 $SAMTOOLS/samtools faidx $RESOURCES/virus.fa
 echo -e "ok"
 ### 
@@ -230,6 +247,7 @@ cat human.fa virus.fa > human_virus.fa
 echo -e "indexing the human and viral reference genome ....\n"
 $SAMTOOLS/samtools faidx $RESOURCES/human_virus.fa
 echo -e "ok"
+
 ### BWA indexing the reference genome
 echo -e "BWA indexing the reference genome ....\n"
 #$BWA/bwa index -a bwtsw -p $RESOURCES/human_virus $RESOURCES/human_virus.fa & 
@@ -241,13 +259,14 @@ pid2=$!
 #wait $pid $pid1 $pid2
 wait $pid1 $pid2
 echo -e "ok"
-# cytoband file
-echo -e "downloading the cytoband file ...\n"
-$wget -q http://hgdownload.cse.ucsc.edu/goldenpath/hg19/database/cytoBand.txt.gz
-# refFlat file
-echo -e "downloading the refFlat file ...\n"
-$wget -q http://hgdownload.cse.ucsc.edu/goldenpath/hg19/database/refFlat.txt.gz
 
+# cytoband file
+#echo -e "downloading the cytoband file ...\n"
+#$wget -q http://hgdownload.cse.ucsc.edu/goldenpath/hg19/database/cytoBand.txt.gz
+
+# refFlat file
+#echo -e "downloading the refFlat file ...\n"
+#$wget -q http://hgdownload.cse.ucsc.edu/goldenpath/hg19/database/refFlat.txt.gz
 
 #blat=$HOME/bin/$MACHTYPE
 echo -e "creating the config file to run your sample ....\n"
