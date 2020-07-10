@@ -279,7 +279,7 @@ while(my $l =<FILE>)	{
 	my @a=split(/\t/,$l);
 	my $add=join(":",@a[0..2]);
 	open (SCRIPT,">$tmp_script")|| die "Can't open script file\n";
-	print SCRIPT "pos=`echo -e \"$a[0]\\t$a[1]\\t$a[2]\" | closestBed -a $random_file -b stdin -d -t first  | awk '\$NF< $dist_To_Soft &&  \$NF>0' | cut -f2 | sort | uniq -c | awk '{print \$2\"\\t\"\$1}' | sort -n -k2,2nr | head -1 | cut -f1`;\nreads=`echo -e \"$a[0]\\t$a[1]\\t$a[2]\" | closestBed -a $random_file -b stdin -d -t first  | awk '\$NF< $dist_To_Soft &&  \$NF>0' | wc -l`\nif [ \$pos ]; then echo -e \"$a[0]\\t\$pos\\t$l\\t\$reads\"; else pos=\$(echo \"scale=0; ($a[1]+$a[2])/2\" | bc -l); echo -e \"$a[0]\\t\$pos\\t$l\\t\$reads\";fi >>$OUTNAME";
+	print SCRIPT "pos=`echo \"$a[0]\\t$a[1]\\t$a[2]\" | closestBed -a $random_file -b stdin -d -t first  | awk '\$NF< $dist_To_Soft &&  \$NF>0' | cut -f2 | sort | uniq -c | awk '{print \$2\"\\t\"\$1}' | sort -n -k2,2nr | head -1 | cut -f1`;\nreads=`echo \"$a[0]\\t$a[1]\\t$a[2]\" | closestBed -a $random_file -b stdin -d -t first  | awk '\$NF< $dist_To_Soft &&  \$NF>0' | wc -l`\nif [ \$pos ]; then echo \"$a[0]\\t\$pos\\t$l\\t\$reads\"; else pos=\$(echo \"scale=0; ($a[1]+$a[2])/2\" | bc -l); echo \"$a[0]\\t\$pos\\t$l\\t\$reads\";fi >>$OUTNAME";
 	$command=join("","chmod 777 ",$tmp_script);
 	if($verbose){	print "$command\n"};
 	system($command);

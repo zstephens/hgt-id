@@ -73,6 +73,8 @@ my $BWA=$config_vars->{'BWA'};
 my $PICARD=$config_vars->{'PICARD'};
 my $FANCYBOX=$config_vars->{'FANCYBOX'};
 my $RLIB=$config_vars->{'RLIB'};
+my $ZCAT=$config_vars->{'ZCAT'};
+my $PYTHON=$config_vars->{'PYTHON'};
 ### add tools to the path
 $ENV{'PATH'} = $SAMTOOLS . ':' . $BEDTOOLS . ':' . $BWA . ':' . $PICARD . ':' . $ENV{'PATH'};
 ### get the path to all the scripts
@@ -310,7 +312,6 @@ if ($chrflag == "yes")	{
 }
 chomp $whichchr;
 print "go back to original BAM file to extract nearby reads...\n";
-
 	
 # $command=join ("","samtools view -b -f2 -F 256 -F 1024 -L ",$OUTPUT,"/regions.2keep.bed ",$BAMFILE," ",$whichchr," > ",$OUTPUT,"/human.org.bam");
 
@@ -339,12 +340,12 @@ submit($command);
 #exit;
 if (! $debug){rmtree("$human_mapping_again","$viral_mapping");}
 if (! $debug){unlink ("$OUTPUT/merged.bam", "$OUTPUT/VIRUS.HUMAN.flt.sort.bam", "$OUTPUT/human.org.bam", "$OUTPUT/human.again.bam", "$OUTPUT/virus.org.bam","$OUTPUT/VIRUS.HUMAN.flt.sort.bai");}
-#### filter the BAM file to remove the reads very close to 5KB centromere using the cytoband file
 
-$command=join ("","zcat ",$CYTOBAND," | grep acen | awk '{if(\$4 ~ /^p/) {print \$1\"\\t\"\$2-50000\"\\t\"\$3} else {print \$1\"\\t\"\$2\"\\t\"\$3+50000}}' | intersectBed -abam ",$OUTPUT,"/",$SAMPLE,".forcalling.bam -b stdin -v > ",$OUTPUT,"/",$SAMPLE,".forcalling.cyto.bam" );
-submit($command); 
-$command=join ("","mv ",$OUTPUT,"/",$SAMPLE,".forcalling.cyto.bam ", $OUTPUT,"/",$SAMPLE,".forcalling.bam");
-submit($command); 
+#### filter the BAM file to remove the reads very close to 5KB centromere using the cytoband file
+#$command=join ("","$ZCAT ",$CYTOBAND," | grep acen | awk '{if(\$4 ~ /^p/) {print \$1\"\\t\"\$2-50000\"\\t\"\$3} else {print \$1\"\\t\"\$2\"\\t\"\$3+50000}}' | intersectBed -abam ",$OUTPUT,"/",$SAMPLE,".forcalling.bam -b stdin -v > ",$OUTPUT,"/",$SAMPLE,".forcalling.cyto.bam" );
+#submit($command); 
+#$command=join ("","mv ",$OUTPUT,"/",$SAMPLE,".forcalling.cyto.bam ", $OUTPUT,"/",$SAMPLE,".forcalling.bam");
+#submit($command); 
 $command=join ("","samtools index ",$OUTPUT,"/",$SAMPLE,".forcalling.bam");
 submit($command); 
 
@@ -358,15 +359,16 @@ print  "find the integration point...\n";
 $command=join ("","perl ",$SCRIPT_DIR,"/integration.pl -b ",$OUTPUT,"/",$SAMPLE,".forcalling.bam -f ",$VIRUS_HUMAN_database, " -o ",$OUTNAME, " -d ",$libsize, " -m ",$MINRP," -l ",$MINSOFT," -r ",$HUMAN_database," -t -v ");
 submit($command); 
 #### filter the file to remove the reads very close to 5KB centromere using the cytoband file
-$command=join("","cat ",$OUTNAME, " | awk '{if(NR==1){print \"#chr\tstart\tend\t\"\$0} else {print \$1\"\\t\"\$2\"\\t\"\$2\"\\t\"\$0}}' > ",$OUTNAME,".bed");
-submit($command); 
-$command=join ("","zcat ",$CYTOBAND," | grep acen | awk '{if(\$4 ~ /^p/) {print \$1\"\\t\"\$2-50000\"\\t\"\$3} else {print \$1\"\\t\"\$2\"\\t\"\$3+50000}}' | intersectBed -a ",$OUTNAME,".bed -b stdin -v -header | cut -f4- > ",$OUTNAME);
-submit($command); 
+#$command=join("","cat ",$OUTNAME, " | awk '{if(NR==1){print \"#chr\tstart\tend\t\"\$0} else {print \$1\"\\t\"\$2\"\\t\"\$2\"\\t\"\$0}}' > ",$OUTNAME,".bed");
+#submit($command); 
+#$command=join ("","$ZCAT ",$CYTOBAND," | grep acen | awk '{if(\$4 ~ /^p/) {print \$1\"\\t\"\$2-50000\"\\t\"\$3} else {print \$1\"\\t\"\$2\"\\t\"\$3+50000}}' | intersectBed -a ",$OUTNAME,".bed -b stdin -v -header | cut -f4- > ",$OUTNAME);
+#submit($command); 
 if (! $debug){unlink ("$OUTNAME.bed");}
   
 ### map it to gene
 print "create a gene bed file to annotate HGT...\n";
-$command=join ("","zcat ",$REF_FLAT," | grep -v random | grep -v chrUn | grep -v hap | awk '{print \$3\"\\t\"\$5\"\\t\"\$6\"\\t\"\$1}' | sortBed -i stdin | perl ",$SCRIPT_DIR,"/uniqgene.pl > ",$OUTPUT,"/gene.bed");
+#$command=join ("","$ZCAT ",$REF_FLAT," | grep -v random | grep -v chrUn | grep -v hap | grep -v alt | grep -v fix | awk '{print \$3\"\\t\"\$5\"\\t\"\$6\"\\t\"\$1}' | sortBed -i stdin | perl ",$SCRIPT_DIR,"/uniqgene.pl > ",$OUTPUT,"/gene.bed");
+$command=join ("","$ZCAT ",$REF_FLAT," | grep -v random | grep -v chrUn | grep -v hap | grep -v alt | grep -v fix | awk '{print \$3\"\\t\"\$5\"\\t\"\$6\"\\t\"\$1}' | sortBed -i stdin | $PYTHON ",$SCRIPT_DIR,"/uniqgene_rewrite.py > ",$OUTPUT,"/gene.bed");
 submit($command); 
 $command=join ("","cat ",$OUTNAME," | awk 'NR>1{print \$1\"\\t\"\$2\"\\t\"\$2}' | closestBed -t first -a stdin -d -b ",$OUTPUT,"/gene.bed  | awk '{print \$1\"\\t\"\$2\"\\t\"\$(NF-1)\"\\t\"\$NF}' > ",$OUTNAME,".gene.txt");
 submit($command); 
@@ -374,8 +376,10 @@ $command=join ("","perl ",$SCRIPT_DIR,"/map.hgt.annot.pl ",$OUTNAME,".gene.txt "
 submit($command); 
 $command=join ("","mv ",$OUTNAME,".annot.txt ",$OUTNAME);
 submit($command); 
+exit; 
 if ( ! $debug){unlink("$OUTPUT/gene.bed","$OUTNAME.gene.txt","$OUTPUT/regions.2keep.bed");}
 if ( ! $debug){rmtree("$human_mapping","$human_mapping_again","$viral_mapping");}
+exit; 
 
 #### filter the results if it is both the human pairs
 
