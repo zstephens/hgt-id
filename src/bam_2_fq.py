@@ -1,5 +1,6 @@
 import sys
 import gzip
+import time
 
 # samtools view input.bam | python bam_2_fq.py out_r1.fq out_r2.fq
 
@@ -29,6 +30,7 @@ else:
 fo_1 = get_file_handle(OUT_R1, 'w')
 fo_2 = get_file_handle(OUT_R2, 'w')
 
+tt = time.time()
 rDict = {}
 unique_readnames = {}
 nWritten = 0
@@ -53,9 +55,9 @@ for line in input_stream:
 
 		if flag&1:
 			if flag&64:
-				rDict[rnm][0].append([rdat, qdat])
+				rDict[rnm][0] = [rdat, qdat]
 			elif flag&128:
-				rDict[rnm][1].append([rdat, qdat])
+				rDict[rnm][1] = [rdat, qdat]
 
 		if len(rDict[rnm][0]) and len(rDict[rnm][1]):
 			fo_1.write('@' + rnm + '/1\n')
@@ -69,7 +71,8 @@ for line in input_stream:
 			del rDict[rnm]
 			nWritten += 1
 			if nWritten%1000000 == 0:
-				print nWritten, 'read pairs written'
+				print nWritten, 'read pairs written', '('+str(int(time.time()-tt))+' sec)'
+print nWritten, 'read pairs written', '('+str(int(time.time()-tt))+' sec)'
 
 fo_2.close()
 fo_1.close()
