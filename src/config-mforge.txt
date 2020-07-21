@@ -1,0 +1,37 @@
+#### references and Parameters
+
+### tools 
+SAMTOOLS="/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/hgt-id/bin/samtools" 
+BEDTOOLS="/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/hgt-id/bin/bedtools/bin"
+BWA="/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/hgt-id/bin/bwa"
+PICARD="/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/hgt-id/bin/picard"
+PRIMER3="/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/hgt-id/bin/primer3/src/primer3_core"
+FANCYBOX="/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/hgt-id/bin/fancybox"
+RLIB="/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/hgt-id/Rlibs"
+#### executable
+PERL="perl"
+JAVA="java"
+R="r"
+ZCAT="zcat"
+PYTHON="/research/bsi/tools/biotools/smrtlink/5.1.0/smrtcmds/bin/python2.7"
+
+### references
+USER_HUMAN_database="/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/hgt-id/resources/reference.fa"
+HUMAN_database="/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/hgt-id/resources/human.fa"
+HUMAN_database_Index="/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/hgt-id/resources/human"
+VIRUS_database="/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/hgt-id/resources/virus.fa"
+VIRUS_database_Index="/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/hgt-id/resources/virus"
+VIRUS_HUMAN_database="/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/hgt-id/resources/human_virus.fa"
+VIRUS_HUMAN_database_Index="/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/hgt-id/resources/human_virus"
+REF_FLAT="/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/hgt-id/resources/refFlat.txt.gz"
+HUMAN_CYTOBAND="/research/bsi/projects/PI/tertiary/Kocher_Jean-Pierre_m026645/s205842.Viral_Integration/processing/hgt-id/resources/cytoBand.txt.gz"
+
+### 
+THREADS="4"
+##lowering this number will give more HGT events 
+SEQUENCE_COMPLEXITY="0.3"
+DEPTH="1"
+
+### Integration Site parameters
+MINRP="0"
+MINSOFT="5"
