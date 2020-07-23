@@ -32,13 +32,11 @@ fo_2 = get_file_handle(OUT_R2, 'w')
 
 tt = time.time()
 rDict = {}
-unique_readnames = {}
 nWritten = 0
 for line in input_stream:
 	if len(line) and line[0] != '#':
 		splt  = line.strip().split('\t')
 		rnm   = splt[0]
-		unique_readnames[rnm] = True
 		if rnm not in rDict:
 			rDict[rnm] = [[],[]]
 		flag  = int(splt[1])
@@ -71,7 +69,7 @@ for line in input_stream:
 			del rDict[rnm]
 			nWritten += 1
 			if nWritten%1000000 == 0:
-				print nWritten, 'read pairs written', '('+str(int(time.time()-tt))+' sec)'
+				print nWritten, 'read pairs written', '('+str(int(time.time()-tt))+' sec)', splt[2] + ':' + splt[3]
 print nWritten, 'read pairs written', '('+str(int(time.time()-tt))+' sec)'
 
 fo_2.close()
